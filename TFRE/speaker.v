@@ -49,17 +49,27 @@ module PlayerCtrl (
 	input reset,
 	input _play,
 	input _repeat,
+	input _rewind,
 	output reg [11:0] ibeat
 );
 	parameter LEN = 4095;
 
 	always @(posedge clk, posedge reset) begin
-		if (reset)
-			ibeat <= 0;
+		if (reset) begin
+			     ibeat <= 0;
+			end
 		else begin
-
 			if(ibeat < LEN) begin
-				ibeat <= (_play) ? (ibeat + 1) : ibeat;
+//				ibeat <= (_play) ? (ibeat + 1) : ibeat;				
+				if(_play) begin
+				    ibeat <= ibeat + 1;
+				        if(_rewind) begin				           
+				             ibeat <= (ibeat > 0)? ibeat-1:-1;				           
+				        end
+				end
+			   else begin
+			     ibeat = ibeat;
+			   end
 			end
 			// About to end: decide whether to proceed
 			else if (ibeat == LEN)begin
@@ -68,7 +78,9 @@ module PlayerCtrl (
 			else if (ibeat > LEN) begin
 				ibeat <= ibeat;
 			end
-			else ibeat <= 0;
+			else begin
+			    ibeat <= 0;
+			end
 		end
 	end
 
@@ -265,9 +277,9 @@ endmodule
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2018/11/26 19:54:13
+// Create Date: 2020/12/20 19:54:13
 // Design Name: 
-// Module Name: Music
+// Module Name: lab8
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -1250,7 +1262,6 @@ module Music_JB (
     always @(*) begin
         if(en==0)begin
             case(ibeatNum)
-                // Ready?
                 12'd0: toneL = `d;	    12'd1: toneL = `d;
                 12'd2: toneL = `d;	    12'd3: toneL = `d;
                 12'd4: toneL = `d;	    12'd5: toneL = `d;
@@ -1598,40 +1609,123 @@ module Music_JB (
     end
 endmodule
 
-
-
 module LED(
     input clk,
     input reset,
     input mute,
-    output reg [4:0] led,
+    output reg [15:0] led,
     output reg [2:0] vol,
     input up,
-    input down
+    input down,
+    input ho,
+    input lo,
+    input [31:0]freqTL,
+    input [31:0] freqTR,
+    output reg[31:0] freqLB,
+    output reg[31:0] freqRB,
+    output reg[31:0] freqLJ,
+    output reg[31:0] freqRJ
 );
 
     reg [2:0] nextVol;
     always @(posedge clk, posedge reset) begin
-        if(reset) vol = 0;
-        else vol = nextVol;
+        if(reset) begin     
+             vol = 0;
+         end
+        else begin
+             vol = nextVol;
+        end
+    end
+
+    reg [31:0] next_LB, next_RB, next_LJ, next_RJ;
+    always @(posedge clk, posedge reset) begin
+        if(reset) begin
+            freqLB = 0;
+            freqRB = 0;
+            freqLJ = 0;
+            freqRJ = 0;
+        end
+        else begin
+            freqLB = next_LB;
+            freqRB = next_RB;
+            freqLJ = next_LJ;
+            freqRJ = next_RJ;
+        end
+    end
+    
+    always@* begin
+        
+        if(ho) begin
+//            if(((freqTL == freqLB *2) && (freqTR == freqRB *2)) || ((freqTL == freqLJ * 2) && (freqTR == freqRJ * 2))) begin
+//                next_LB = freqLB;
+//                next_RB = freqRB;
+//                next_LJ = freqLJ;
+//                next_RJ = freqRJ;
+//            end
+//            else begin
+                 next_LB = freqLB*2;
+                 next_RB = freqRB*2;
+                 next_LJ = freqLJ*2;
+                 next_RJ = freqRJ*2;
+//            end
+        end
+        else if(lo) begin
+//             if(((freqTL == freqLB /2) && (freqTR == freqRB /2)) || ((freqTL == freqLJ / 2) && (freqTR == freqRJ / 2))) begin
+//                next_LB = freqLB;
+//                next_RB = freqRB;
+//                next_LJ = freqLJ;
+//                next_RJ = freqRJ;
+//            end
+//            else begin
+                 next_LB = freqLB/2;
+                 next_RB = freqRB/2;
+                 next_LJ = freqLJ/2;
+                 next_RJ = freqRJ/2;
+//            end
+        end
+        else begin
+            next_LB = freqTL;
+            next_RB = freqTR;
+            next_LJ = freqTL;
+            next_RJ = freqTR;
+        end
+    end
+    
+
+    always @* begin
+        if(up) begin
+              if(vol == 3'd4) begin
+                nextVol =  3'd4;
+              end
+          else begin
+              nextVol = vol + 1;
+          end
+         end
+        else if (down) begin
+                if(vol == 3'd0) begin
+                  nextVol =  3'd0 ;
+                end
+            else begin
+                 nextVol = vol - 1;
+            end
+        end
+        else begin
+             nextVol = vol;
+          end
     end
 
     always @* begin
-        if(up) nextVol = (vol == 3'd4) ? 3'd4 : (vol + 1);
-        else if (down) nextVol = (vol == 3'd0) ? 3'd0 : (vol - 1);
-        else nextVol = vol;
-    end
-
-    always @* begin
-        if(mute) led = 5'b00000;
+        if(mute) begin
+            led = 16'h0000;
+        end
         else begin
             case(vol)
-                3'd0: led = 5'b00001;
-                3'd1: led = 5'b00011;
-                3'd2: led = 5'b00111;
-                3'd3: led = 5'b01111;
-                3'd4: led = 5'b11111;
-                default: led = 5'b10101;
+                3'd0: led = 16'h0001;
+                3'd1: led = 16'h0003;
+                3'd2: led = 16'h0007;
+                3'd3: led = 16'h000F;
+                3'd4: led = 16'h001F;
+                default: led = 15'h0015;
             endcase
         end
     end
@@ -1669,7 +1763,8 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
     always @(posedge clk, posedge rst) begin
         if(rst) begin
             DIGIT = 4'b1110;
-        end else begin
+        end       
+        else begin
             case(DIGIT)
                 4'b1110: DIGIT = 4'b1101;
                 4'b1101: DIGIT = 4'b1011;
@@ -1681,47 +1776,42 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
     
     always @* begin
         if(DIGIT == 4'b1110) begin
-            // Note
             // C
-            if((freq == 32'd1047) | (freq == 32'd1109) | (freq == 32'd524) | (freq == 32'd554) | (freq == 32'd262) | (freq == 32'd277))
-                DISPLAY = 7'b1000110;
+            if((freq == 32'd1047) | (freq == 32'd1109) | (freq == 32'd524) | (freq == 32'd554) | (freq == 32'd262) | (freq == 32'd277)) begin
+                 DISPLAY = 7'b1000110;
+                end
             // D
-            else if((freq == 32'd1175) | (freq == 32'd588) | (freq == 32'd294))
+            else if((freq == 32'd1175) | (freq == 32'd588) | (freq == 32'd294)) begin
                 DISPLAY = 7'b0100001;
+                end
             // E
-            else if((freq == 32'd1319) | (freq == 32'd660) | (freq == 32'd330))
+            else if((freq == 32'd1319) | (freq == 32'd660) | (freq == 32'd330)) begin
                 DISPLAY = 7'b0000110;
+                end
             // F
-            else if((freq == 32'd698) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370))
+            else if((freq == 32'd698) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370)) begin
                 DISPLAY = 7'b0001110;
+                end
             // G
-            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415))
+            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415)) begin
                 DISPLAY = 7'b0000010;
+                end
             // A
-            else if((freq == 32'd880) | (freq == 32'd440))
+            else if((freq == 32'd880) | (freq == 32'd440)) begin
                 DISPLAY = 7'b0001000;
+                end
             // B
-            else if((freq == 32'd988) | (freq == 32'd494))
+            else if((freq == 32'd988) | (freq == 32'd494)) begin
                 DISPLAY = 7'b0000011;
-            else
+                end
+            else if(en == 1) begin
                 DISPLAY =  7'b0111111;
-        end else if(DIGIT == 4'b1101) begin
-            // Sharp and high notation
-            // High Normal
-            if((freq == `hc) | (freq == `hd) | (freq == `he) | (freq == `hf) | (freq == `hg) | (freq == `ha) | (freq == `hb))
-                DISPLAY = 7'b1111110;
-            // High Sharp
-            else if((freq == `hcs) | (freq == `hfs))
-                DISPLAY = 7'b1011100;
-            // Normal
-            else if((freq == `c) | (freq == `d) | (freq == `e) | (freq == `f) | (freq == `g) | (freq == `a) | (freq == `b))
-                DISPLAY = 7'b1110111;
-            // Sharp
-            else if((freq == `cs) | (freq == `fs) | (freq == `gs))
-                DISPLAY = 7'b1010101;
-            else 
-                DISPLAY = 7'b0111111;
-        end else begin
+            end
+            else begin
+                DISPLAY =  7'b0111111;
+            end
+           end        
+         else begin
             DISPLAY = 7'b0111111;
         end
     end
@@ -1734,10 +1824,13 @@ module speaker(
     _play,
     _mute,
     _repeat,
+    _rewind,
     _music,
     _volUP,
     _volDOWN,
-    _vol,
+    _higherOCT,
+    _lowerOCT,
+    _led,
     audio_mclk, // master clock
     audio_lrck, // left-right clock
     audio_sck, // serial clock
@@ -1748,8 +1841,9 @@ module speaker(
     // I/O declaration
     input clk;  // clock from the crystal
     input rst;  // active high reset
-    input _play, _mute, _repeat, _music, _volUP, _volDOWN;
-    output [4:0] _vol;
+    input _play, _mute, _repeat, _rewind, _music;
+    input  _volUP, _volDOWN, _higherOCT, _lowerOCT;
+    output [15:0] _led;
     output audio_mclk; // master clock
     output audio_lrck; // left-right clock
     output audio_sck; // serial clock
@@ -1764,12 +1858,12 @@ module speaker(
     wire [11:0] ibeatNumJB, ibeatNumBC;
 
     wire [21:0] freq_out, freq_outR;
-    wire clkDiv23, clkDiv18, clkDiv13;
+    wire clkDiv22, clkDiv18, clkDiv13;
     wire real_mute;
 
-    clock_divider #(.n(22)) clock_23(
+    clock_divider #(.n(22)) clock_22(
         .clk(clk),
-       .clk_div(clkDiv23)
+       .clk_div(clkDiv22)
     );
 
     clock_divider #(.n(18)) clock_18(
@@ -1784,51 +1878,66 @@ module speaker(
 
     // Music Switch
     wire op_pos_music, op_neg_music;
-    onepulse OP_POS_MUSIC(.signal(_music), .clk(clkDiv23), .op(op_pos_music));
-    onepulse OP_NEG_MUSIC(.signal(~_music), .clk(clkDiv23), .op(op_neg_music));
+    onepulse MUSIC_1(.signal(_music), .clk(clkDiv22), .op(op_pos_music));
+    onepulse MUSIC_0(.signal(~_music), .clk(clkDiv22), .op(op_neg_music));
 
     // BC Player
     PlayerCtrl #(.LEN(620)) playerCtrl_00 ( 
-        .clk(clkDiv23),
+        .clk(clkDiv22),
         .reset(op_neg_music | rst),
         ._play(_play),
         ._repeat(_repeat),
+        ._rewind(_rewind),
         .ibeat(ibeatNumBC)
     );
     
     // Jingle Bells Player
     PlayerCtrl #(.LEN(600)) playerCtrl_01 ( 
-        .clk(clkDiv23),
+        .clk(clkDiv22),
         .reset(op_pos_music | rst),
         ._play(_play),
         ._repeat(_repeat),
+        ._rewind(_rewind),
         .ibeat(ibeatNumJB)
     );
 
     // Button Processing
-    wire dvu, dvd, ovu, ovd;
+    wire dvu, dvd, ovu, ovd, dh_OCT, dlOCT, ohOCT, olOCT;
     debounce db0(.pb_debounced(dvu), .pb(_volUP) ,.clk(clkDiv18));
     debounce db1(.pb_debounced(dvd), .pb(_volDOWN) ,.clk(clkDiv18));
+    debounce Hoct(.pb_debounced(dh_OCT), .pb(_higherOCT) ,.clk(clkDiv18));
+    debounce Loct(.pb_debounced(dlOCT), .pb(_lowerOCT) ,.clk(clkDiv18));
 
-    onepulse op0(.signal(dvu), .clk(clkDiv23), .op(ovu));
-    onepulse op1(.signal(dvd), .clk(clkDiv23), .op(ovd));
+    onepulse op0(.signal(dvu), .clk(clkDiv22), .op(ovu));
+    onepulse op1(.signal(dvd), .clk(clkDiv22), .op(ovd));
+    onepulse hOC(.signal(dh_OCT), .clk(clkDiv22), .op(ohOCT));
+    onepulse lOC(.signal(dlOCT), .clk(clkDiv22), .op(olOCT));
+    
+     wire [31:0] freqBC, freqRBC, freqJB, freqRJB, freq_LB, freq_RB, freq_LJ, freq_RJ;
     // LED Control
-
-    LED _led(
-        .clk(clkDiv23),
+    LED __led(
+        .clk(clkDiv22),
         .reset(rst),
         .mute(_mute),
-        .led(_vol),
+        .led(_led),
         .vol(volume),
         .up(ovu),
-        .down(ovd)
+        .down(ovd),
+        .ho(ohOCT),
+        .lo(olOCT),
+        .freqTL((_music?freqJB:freqBC)),
+        .freqTR((_music?freqRJB:freqRBC)),
+        .freqLB(freq_LB),
+        .freqRB(freq_RB),
+        .freqLJ(freq_LJ),
+        .freqRJ(freq_RJ)
     );
 
     // Seven Segment
-    SevenSeg ss(.clk(clkDiv13), .rst(rst), .en(~_play), .freq((_music ? freqJB : freqBC)), .DIGIT(DIGIT), .DISPLAY(DISPLAY));
+    SevenSeg ss(.clk(clkDiv13), .rst(rst), .en(~_play), .freq((_music ? freq_LJ : freq_LB)), .DIGIT(DIGIT), .DISPLAY(DISPLAY));
 
     // Music module
-    wire [31:0] freqBC, freqRBC, freqJB, freqRJB;
+//    wire [31:0] freqBC, freqRBC, freqJB, freqRJB, freqLB, freqRB, freqLJ, freqRJ;
     wire realMute;
     assign realMute = _mute | ~_play;
     Music_BC music00 ( 
@@ -1845,9 +1954,12 @@ module speaker(
         .toneR(freqRJB)
     );
 
+    
 
-    assign freq_out = 50000000 / (realMute ? 32'd50000 : (_music ? freqJB : freqBC));
-    assign freq_outR = 50000000 / (realMute ? 32'd50000 : (_music ? freqRJB : freqRBC));
+    assign freq_out = 50000000 / (realMute ? 32'd50000 : (_music ? freq_LJ : freq_LB));
+    assign freq_outR = 50000000 / (realMute ? 32'd50000 : (_music ? freq_RJ : freq_RB));
+    
+    
 
     // Note generation: Split Left and Right
     note_gen Audio(
