@@ -1665,10 +1665,10 @@ module LED(
 //                next_RJ = freqRJ;
 //            end
 //            else begin
-                 next_LB = freqLB*2;
-                 next_RB = freqRB*2;
-                 next_LJ = freqLJ*2;
-                 next_RJ = freqRJ*2;
+                 next_LB = freqTL*2;
+                 next_RB = freqTR*2;
+                 next_LJ = freqTL*2;
+                 next_RJ = freqTR*2;
                  next_flag = 1;
 //            end
         end
@@ -1680,10 +1680,10 @@ module LED(
 //                next_RJ = freqRJ;
 //            end
 //            else begin
-                 next_LB = freqLB/2;
-                 next_RB = freqRB/2;
-                 next_LJ = freqLJ/2;
-                 next_RJ = freqRJ/2;
+                 next_LB = freqTL/2;
+                 next_RB = freqTR/2;
+                 next_LJ = freqTL/2;
+                 next_RJ = freqTR/2;
                  next_flag = 1;
 //            end
         end 
