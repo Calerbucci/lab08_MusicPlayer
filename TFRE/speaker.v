@@ -59,8 +59,7 @@ module PlayerCtrl (
 			     ibeat <= 0;
 			end
 		else begin
-			if(ibeat < LEN) begin
-//				ibeat <= (_play) ? (ibeat + 1) : ibeat;				
+			if(ibeat < LEN) begin	
 				if(_play) begin
 				    ibeat <= ibeat + 1;
 				        if(_rewind) begin				           
@@ -273,25 +272,6 @@ always @*
 endmodule
 
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/12/20 19:54:13
-// Design Name: 
-// Module Name: lab8
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 `define hhc  32'd1047 // C5
 `define hhcs 32'd1109       // C5#
 `define hhd  32'd1175 // D5
@@ -1613,7 +1593,7 @@ module LED(
     input clk,
     input reset,
     input mute,
-    output reg [15:0] led,
+    output [15:0] led,
     output reg [2:0] vol,
     input up,
     input down,
@@ -1638,14 +1618,14 @@ module LED(
     end
 
     reg [31:0] next_LB, next_RB, next_LJ, next_RJ;
-    reg flag, next_flag;
+    reg [1:0] flag, next_flag;
     always @(posedge clk, posedge reset) begin
         if(reset) begin
             freqLB = 0;
             freqRB = 0;
             freqLJ = 0;
             freqRJ = 0;
-            flag = 0;
+            flag = 2'b01;
         end
         else begin
             freqLB = next_LB;
@@ -1657,48 +1637,46 @@ module LED(
     end
     
     always@* begin
-        if(ho) begin
-//            if(((freqTL == freqLB *2) && (freqTR == freqRB *2)) || ((freqTL == freqLJ * 2) && (freqTR == freqRJ * 2))) begin
-//                next_LB = freqLB;
-//                next_RB = freqRB;
-//                next_LJ = freqLJ;
-//                next_RJ = freqRJ;
-//            end
-//            else begin
-                 next_LB = freqTL*2;
-                 next_RB = freqTR*2;
-                 next_LJ = freqTL*2;
-                 next_RJ = freqTR*2;
-                 next_flag = 1;
-//            end
+        if(ho && flag < 2'b10) begin
+             next_LB = freqTL*2;
+             next_RB = freqTR*2;
+             next_LJ = freqTL*2;
+             next_RJ = freqTR*2;
+             next_flag = flag + 1;
         end
-        else if(lo) begin
-//             if(((freqTL == freqLB /2) && (freqTR == freqRB /2)) || ((freqTL == freqLJ / 2) && (freqTR == freqRJ / 2))) begin
-//                next_LB = freqLB;
-//                next_RB = freqRB;
-//                next_LJ = freqLJ;
-//                next_RJ = freqRJ;
-//            end
-//            else begin
-                 next_LB = freqTL/2;
-                 next_RB = freqTR/2;
-                 next_LJ = freqTL/2;
-                 next_RJ = freqTR/2;
-                 next_flag = 1;
-//            end
+        else if(lo && flag > 2'b0) begin
+             next_LB = freqTL/2;
+             next_RB = freqTR/2;
+             next_LJ = freqTL/2;
+             next_RJ = freqTR/2;
+             next_flag = flag - 1;
         end 
-        else if (flag == 1) begin
-            next_LB = freqLB;
-            next_RB = freqRB;
-            next_LJ = freqLJ;
-            next_RJ = freqRJ;
+        else if (flag == 2'b00) begin
+            next_LB = freqTL/2;
+            next_RB = freqTR/2;
+            next_LJ = freqTL/2;
+            next_RJ = freqTR/2;
+            next_flag = flag;
+        end
+        else if (flag == 2'b01) begin
+            next_LB = freqTL;
+            next_RB = freqTR;
+            next_LJ = freqTL;
+            next_RJ = freqTR;
+            next_flag = flag;
+        end
+        else if (flag == 2'b10) begin
+            next_LB = freqTL*2;
+            next_RB = freqTR*2;
+            next_LJ = freqTL*2;
+            next_RJ = freqTR*2;
             next_flag = flag;
         end else begin
             next_LB = freqTL;
             next_RB = freqTR;
             next_LJ = freqTL;
             next_RJ = freqTR;
-            next_flag = 0;
+            next_flag = 1;
         end
     end
     
@@ -1725,22 +1703,51 @@ module LED(
           end
     end
 
+//    always @* begin
+//        if(mute) begin
+//            led = 16'h0000;
+//        end
+//        else begin
+//            case(vol)
+//                3'd0: led = 16'h0001;
+//                3'd1: led = 16'h0003;
+//                3'd2: led = 16'h0007;
+//                3'd3: led = 16'h000F;
+//                3'd4: led = 16'h001F;
+//                default: led = 15'h0015;
+//            endcase
+//        end
+//    end
+    
+    reg [15:0] led_vol, next_led_vol, led_oct, next_led_oct;
+    // volume
     always @* begin
         if(mute) begin
-            led = 16'h0000;
+            led_vol = 16'h0000;
         end
         else begin
             case(vol)
-                3'd0: led = 16'h0001;
-                3'd1: led = 16'h0003;
-                3'd2: led = 16'h0007;
-                3'd3: led = 16'h000F;
-                3'd4: led = 16'h001F;
-                default: led = 15'h0015;
+                3'd0: led_vol = 16'h0001;
+                3'd1: led_vol = 16'h0003;
+                3'd2: led_vol = 16'h0007;
+                3'd3: led_vol = 16'h000F;
+                3'd4: led_vol = 16'h001F;
+                default: led_vol = 15'h0015;
             endcase
         end
     end
-
+    
+    always @* begin
+        case(flag)
+            2'b00: led_oct = 16'h8000;
+            2'b01: led_oct = 16'h4000;
+            2'b10: led_oct = 16'h2000;
+            default: led_oct = 16'h4000;
+        endcase
+    end
+    
+    assign led = led_oct + led_vol;
+    
 endmodule
 
 module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
@@ -1787,37 +1794,37 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
     
     always @* begin
         if(DIGIT == 4'b1110) begin
+            if(en == 0) begin
+                DISPLAY =  7'b0111111;
+            end
             // C
-            if((freq == 32'd1047) | (freq == 32'd1109) | (freq == 32'd524) | (freq == 32'd554) | (freq == 32'd262) | (freq == 32'd277)) begin
+            else if((freq == 32'd1048) | (freq == 32'd1108) | (freq == 32'd524) | (freq == 32'd554) | (freq == 32'd262) | (freq == 32'd277) | (freq == 32'd131) | (freq == 32'd138)) begin
                  DISPLAY = 7'b1000110;
                 end
             // D
-            else if((freq == 32'd1175) | (freq == 32'd588) | (freq == 32'd294)) begin
+            else if((freq == 32'd1175) | (freq == 32'd588) | (freq == 32'd294)| (freq == 32'd147)) begin
                 DISPLAY = 7'b0100001;
                 end
             // E
-            else if((freq == 32'd1319) | (freq == 32'd660) | (freq == 32'd330)) begin
+            else if((freq == 32'd1319) | (freq == 32'd660) | (freq == 32'd330) | (freq == 32'd165)) begin
                 DISPLAY = 7'b0000110;
                 end
             // F
-            else if((freq == 32'd698) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370)) begin
+            else if((freq == 32'd698) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370) | (freq == 32'd174) | (freq == 32'd185)) begin
                 DISPLAY = 7'b0001110;
                 end
             // G
-            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415)) begin
+            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415) | (freq == 32'd196) | (freq == 32'd207)) begin
                 DISPLAY = 7'b0000010;
                 end
             // A
-            else if((freq == 32'd880) | (freq == 32'd440)) begin
+            else if((freq == 32'd880) | (freq == 32'd440) | (freq == 32'd220)) begin
                 DISPLAY = 7'b0001000;
                 end
             // B
-            else if((freq == 32'd988) | (freq == 32'd494)) begin
+            else if((freq == 32'd988) | (freq == 32'd494) | (freq == 32'd247)) begin
                 DISPLAY = 7'b0000011;
-                end
-            else if(en == 1) begin
-                DISPLAY =  7'b0111111;
-            end
+                end          
             else begin
                 DISPLAY =  7'b0111111;
             end
@@ -1945,7 +1952,7 @@ module speaker(
     );
 
     // Seven Segment
-    SevenSeg ss(.clk(clkDiv13), .rst(rst), .en(~_play), .freq((_music ? freq_LJ : freq_LB)), .DIGIT(DIGIT), .DISPLAY(DISPLAY));
+    SevenSeg ss(.clk(clkDiv13), .rst(rst), .en(_play), .freq((_music ? freq_LJ : freq_LB)), .DIGIT(DIGIT), .DISPLAY(DISPLAY));
 
     // Music module
 //    wire [31:0] freqBC, freqRBC, freqJB, freqRJB, freqLB, freqRB, freqLJ, freqRJ;
@@ -1967,8 +1974,8 @@ module speaker(
 
     
 
-    assign freq_out = 50000000 / (realMute ? 32'd50000 : (_music ? freq_LJ : freq_LB));
-    assign freq_outR = 50000000 / (realMute ? 32'd50000 : (_music ? freq_RJ : freq_RB));
+    assign freq_out = 50000000 / (realMute | (_rewind && rst) ? `sil : (_music ? freq_LJ : freq_LB));
+    assign freq_outR = 50000000 / (realMute | (_rewind && rst) ? `sil : (_music ? freq_RJ : freq_RB));
     
     
 
