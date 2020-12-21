@@ -70,7 +70,6 @@ module PlayerCtrl (
 			     ibeat = ibeat;
 			   end
 			end
-			// About to end: decide whether to proceed
 			else if (ibeat == LEN)begin
 				ibeat <= (_repeat) ? 0 : (LEN + 1);
 			end
@@ -272,9 +271,9 @@ always @*
 endmodule
 
 `timescale 1ns / 1ps
-`define hhc  32'd1047 // C5
-`define hhcs 32'd1109       // C5#
-`define hhd  32'd1175 // D5
+`define hhc  32'd1048 // C5
+`define hhcs 32'd1108       // C5#
+`define hhd  32'd1176 // D5
 `define hhe  32'd1319 // E5
 `define hc  32'd524   // C4
 `define hcs 32'd554         // C4#
@@ -282,8 +281,8 @@ endmodule
 `define he  32'd660   // E4
 `define hf  32'd698   // F4
 `define hfs 32'd740         // F4#
-`define hg  32'd784   // G4
-`define ha  32'd880   // A4 
+`define hg  32'd784   // G5
+`define ha  32'd880   // A5
 `define hb  32'd988   // B4 
 `define c   32'd262   // C3
 `define cs  32'd277         // C3#
@@ -293,7 +292,7 @@ endmodule
 `define fs  32'd370         // F3#
 `define g   32'd392   // G3
 `define gs  32'd415         // G3#
-`define a   32'd440   // A3
+`define a   32'd440   // A4
 `define b   32'd494   // B3
 `define sil   32'd50000 //slience (over freq.)
 
@@ -1774,15 +1773,15 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
                 DISPLAY = 7'b0000110;
                 end
             // F
-            else if((freq == 32'd698) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370) | (freq == 32'd174) | (freq == 32'd185)) begin
+            else if((freq == 32'd698)  | (freq == 32'd1396) | (freq == 32'd740) | (freq == 32'd349) | (freq == 32'd370) | (freq == 32'd174) | (freq == 32'd185)) begin
                 DISPLAY = 7'b0001110;
                 end
             // G
-            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415) | (freq == 32'd196) | (freq == 32'd207) | (freq == 32'd830)) begin
+            else if((freq == 32'd784) | (freq == 32'd1568)| (freq == 32'd392) | (freq == 32'd415) | (freq == 32'd196) | (freq == 32'd207) | (freq == 32'd830)) begin
                 DISPLAY = 7'b0000010;
                 end
             // A  Berl@nda19
-            else if((freq == 32'd880) | (freq == 32'd440) | (freq == 32'd220)) begin
+            else if((freq == 32'd880)  | (freq == 32'd1760)| (freq == 32'd440) | (freq == 32'd220)) begin
                 DISPLAY = 7'b0001000;
                 end
             // B
