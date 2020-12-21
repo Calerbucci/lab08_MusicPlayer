@@ -1703,22 +1703,6 @@ module LED(
           end
     end
 
-//    always @* begin
-//        if(mute) begin
-//            led = 16'h0000;
-//        end
-//        else begin
-//            case(vol)
-//                3'd0: led = 16'h0001;
-//                3'd1: led = 16'h0003;
-//                3'd2: led = 16'h0007;
-//                3'd3: led = 16'h000F;
-//                3'd4: led = 16'h001F;
-//                default: led = 15'h0015;
-//            endcase
-//        end
-//    end
-    
     reg [15:0] led_vol, next_led_vol, led_oct, next_led_oct;
     // volume
     always @* begin
@@ -1752,26 +1736,6 @@ endmodule
 
 module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
 
-    `define hc  32'd524   // C4
-    `define hd  32'd588   // D4
-    `define he  32'd660   // E4
-    `define hf  32'd698   // F4
-    `define hg  32'd784   // G4
-    `define ha  32'd880   // A4 
-    `define hb  32'd988   // B4
-    `define hcs 32'd554         // C4#
-    `define hfs 32'd740         // F4#
-    `define c   32'd262   // C3
-    `define cs  32'd277         // C3#
-    `define d   32'd294   // D3
-    `define e   32'd330   // E3
-    `define f   32'd349   // F3
-    `define fs  32'd370         // F3#
-    `define g   32'd392   // G3
-    `define gs  32'd415         // G3#
-    `define a   32'd440   // A3
-    `define b   32'd494   // B3
-
     input clk, rst;
     input en;
     input [31:0] freq;
@@ -1802,11 +1766,11 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
                  DISPLAY = 7'b1000110;
                 end
             // D
-            else if((freq == 32'd1175) | (freq == 32'd588) | (freq == 32'd294)| (freq == 32'd147)) begin
+            else if((freq == 32'd1176) | (freq == 32'd588) | (freq == 32'd294)| (freq == 32'd147)) begin
                 DISPLAY = 7'b0100001;
                 end
             // E
-            else if((freq == 32'd1319) | (freq == 32'd660) | (freq == 32'd330) | (freq == 32'd165)) begin
+            else if((freq == 32'd1320) | (freq == 32'd660) | (freq == 32'd330) | (freq == 32'd165)) begin
                 DISPLAY = 7'b0000110;
                 end
             // F
@@ -1814,10 +1778,10 @@ module SevenSeg(clk, rst, en, freq, DIGIT, DISPLAY);
                 DISPLAY = 7'b0001110;
                 end
             // G
-            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415) | (freq == 32'd196) | (freq == 32'd207)) begin
+            else if((freq == 32'd784) | (freq == 32'd392) | (freq == 32'd415) | (freq == 32'd196) | (freq == 32'd207) | (freq == 32'd830)) begin
                 DISPLAY = 7'b0000010;
                 end
-            // A
+            // A  Berl@nda19
             else if((freq == 32'd880) | (freq == 32'd440) | (freq == 32'd220)) begin
                 DISPLAY = 7'b0001000;
                 end
