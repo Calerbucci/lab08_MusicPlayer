@@ -1638,23 +1638,25 @@ module LED(
     end
 
     reg [31:0] next_LB, next_RB, next_LJ, next_RJ;
+    reg flag, next_flag;
     always @(posedge clk, posedge reset) begin
         if(reset) begin
             freqLB = 0;
             freqRB = 0;
             freqLJ = 0;
             freqRJ = 0;
+            flag = 0;
         end
         else begin
             freqLB = next_LB;
             freqRB = next_RB;
             freqLJ = next_LJ;
             freqRJ = next_RJ;
+            flag = next_flag;
         end
     end
     
     always@* begin
-        
         if(ho) begin
 //            if(((freqTL == freqLB *2) && (freqTR == freqRB *2)) || ((freqTL == freqLJ * 2) && (freqTR == freqRJ * 2))) begin
 //                next_LB = freqLB;
@@ -1667,6 +1669,7 @@ module LED(
                  next_RB = freqRB*2;
                  next_LJ = freqLJ*2;
                  next_RJ = freqRJ*2;
+                 next_flag = 1;
 //            end
         end
         else if(lo) begin
@@ -1681,13 +1684,21 @@ module LED(
                  next_RB = freqRB/2;
                  next_LJ = freqLJ/2;
                  next_RJ = freqRJ/2;
+                 next_flag = 1;
 //            end
-        end
-        else begin
+        end 
+        else if (flag == 1) begin
+            next_LB = freqLB;
+            next_RB = freqRB;
+            next_LJ = freqLJ;
+            next_RJ = freqRJ;
+            next_flag = flag;
+        end else begin
             next_LB = freqTL;
             next_RB = freqTR;
             next_LJ = freqTL;
             next_RJ = freqTR;
+            next_flag = 0;
         end
     end
     
